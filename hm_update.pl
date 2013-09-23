@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/env perl 
 
 use 5.16.0;
 
@@ -10,9 +10,11 @@ use Path::Tiny;
 use Data::Printer;
 use Net::Hiveminder;
 
-my $hive_tasks = LoadFile( 'todo.yaml' );
+my $hive_tasks = LoadFile( '/home/yanick/.todo.yaml' );
 
-my $local_tasks = parse_tasks();
+my $in = join '', <>;
+
+my $local_tasks = parse_tasks( $in );
 
 my $hive = Net::Hiveminder->new( use_config => 1 );
 
@@ -21,10 +23,10 @@ for my $task ( values %$local_tasks ) {
     my @updates =  grep { $task->{$_} ne $hive_tasks->{$id}{$_} } keys $task
         or next;
 
-    say "updating $id";
-    say "\tfields: ", join ', ', @updates;
-    say "\twere: ", join ', ', map { $hive_tasks->{$id}{$_} } @updates;
-    say "\tnow: ", join ', ', map { $task->{$_} } @updates;
+    #warn "updating $id";
+    #warn "\tfields: ", join ', ', @updates;
+    #warn "\twere: ", join ', ', map { $hive_tasks->{$id}{$_} } @updates;
+    #warn "\tnow: ", join ', ', map { $task->{$_} } @updates;
 
     $hive->update_task( $id => 
         map { $_ => $task->{$_} } @updates
@@ -32,17 +34,17 @@ for my $task ( values %$local_tasks ) {
 
 }
 
-sub parse_tasks {
-    my $file = path( 'todo.md' );
+print $in;
 
-    my @tasks = split qr/\n(?=\[.\])/, $file->slurp;
+sub parse_tasks {
+    my @tasks = split qr/\n\s*\*\s+(?=\[.\])/, shift;
 
     my %tasks;
 
     for my $t ( @tasks ) {
         my %t;
-        if( $t =~ /\[(.)\].*P(\d)\s+&([0-9A-Z]+)/ ) {
-            @t{'record_locator','priority','complete'} = ( $3, $2, ( $1 eq ' ' ? 0 : 1 ));
+        if( $t =~ /^\s*\*\s+\[(.)\].*P(\d)\s+&([0-9A-Z]+)/m ) {
+            @t{'record_locator','priority','complete'} = ( $3, $2, ( $1 eq 'X' ? 1 : 0 ));
         }
         next unless $t{record_locator};
         $tasks{ $t{record_locator} } = \%t;

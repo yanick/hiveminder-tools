@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/env perl 
 
 use 5.16.0;
 
@@ -9,13 +9,9 @@ no warnings qw/ uninitialized /;
 use Net::Hiveminder;
 use DateTime::Functions qw/ now /;
 use Data::Printer;
-use YAML qw/ DumpFile /;
+use YAML qw/ LoadFile /;
 
-my $hive = Net::Hiveminder->new( use_config => 1 );
-
-my %tasks = map { $_->{record_locator} => $_ } $hive->todo_tasks;
-
-DumpFile( 'todo.yaml', \%tasks );
+my %tasks = %{ YAML::LoadFile( '/home/yanick/.todo.yaml' ) };
 
 my @sort_due_date = (
     map  { "" . now()->add( weeks => $_ ) } 0, 16, 8, 4, 2, 1
@@ -39,15 +35,13 @@ for ( @sorted_tasks ) {
 }
 @sorted_tasks = @t;
 
-open STDOUT, '>', 'todo.md';
-
 print_task($_) for @sorted_tasks;
 
 sub print_task {
     my $t = shift;
 
     $_->{summary} =~ s/(?<=.{57}).{4,}/.../;
-    printf "[ ] %-60s P%d %s%s\n", $_->{summary}, $_->{priority}, "&", $_->{record_locator};
+    printf "* [ ] %-60s P%d %s%s\n", $_->{summary}, $_->{priority}, "&", $_->{record_locator};
     print '  tags: ', join( ' ', $_->{tags} =~ /"(.+?)"/g ), "\n" if $_->{tags};
     for my $field ( qw/ due / ) {
         next unless defined $_->{$field};
@@ -55,4 +49,5 @@ sub print_task {
     }
     print "\n";
 }
+
 

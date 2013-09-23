@@ -1,0 +1,6 @@
+:2,3!/home/yanick/work/todo/hm_update.pl
+
+:map <Leader>u :0,$!/home/yanick/work/todo/hm_update.pl
+:map <Leader>r :!/home/yanick/work/todo/hm_reset.pl
+:map <Leader>p :0,$!/home/yanick/work/todo/hm_print.pl
+
